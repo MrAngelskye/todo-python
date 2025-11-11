@@ -1,0 +1,82 @@
+from datetime import datetime
+
+tasks = []
+while_bool = True
+
+def load_tasks():
+    try:
+        with open("tasks.txt", "r") as file:
+            for line in file:
+                tasks.append(line.strip())
+    except FileNotFoundError:
+        with open("tasks.txt", "w") as file:
+            print("файл не найден, создан новый")
+
+
+def save_tasks(tasks):
+    with open("tasks.txt", "w") as file:
+        for line in tasks:
+            file.write(line + "\n")
+
+def add_task():
+    global tasks
+    create_time = datetime.now().strftime("%d.%m.%Y %H:%M")
+    text_input = input("Введите текст: ")
+    full_task = f"{text_input} | {create_time}"
+    tasks.append(full_task)
+    save_tasks(tasks)
+    print("Задача добавлена")
+
+def show_tasks():
+    if not tasks:
+        print("Список задач пуст")
+        return
+    print("------------------------------------------------")
+    for i, task in enumerate(tasks, 1):
+        if " | " in task:
+            text, data = task.split(" | ")
+            print(f"{i}. {text.ljust(30)} | {data}")
+        else:
+            print(f"{i}. {task}")
+    print("------------------------------------------------")
+
+def delete_task():
+    show_tasks()
+    num_is_del = input("Введите номер который хотите удалить: ")
+    num_is_del = num_is_del.strip()
+    if num_is_del.isdigit():
+        num_is_del = int(num_is_del)
+        if 1 <= num_is_del <= len(tasks):
+            removed = tasks.pop(num_is_del - 1)
+            print(f"Удалена задача: {removed}")
+        else:
+            print("Ошибка: такого номера нет в списке")
+    else:
+        print("Ошибка: введите число")
+    save_tasks(tasks)
+
+def menu_task():
+    try:
+        print("1. Добавить задачу\n"
+            "2. Удалить задачу\n"
+            "3. Посмотреть задачи\n"
+            "4. Выйти")
+        num_menu = int(input("В ведите действие: "))
+        if num_menu == 1:
+            add_task()
+            return True
+        elif num_menu == 2:
+            delete_task()
+            return True
+        elif num_menu == 3:
+            show_tasks()
+            return True
+        elif num_menu == 4:
+            return False
+    except ValueError:
+        print("Вы ввели не число")
+
+
+load_tasks()
+while while_bool:
+    while_bool = menu_task()
