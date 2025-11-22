@@ -1,28 +1,34 @@
 from datetime import datetime
+import json
 
 tasks = []
 while_bool = True
 
 def load_tasks():
+    global tasks
     try:
-        with open("tasks.txt", "r") as file:
-            for line in file:
-                tasks.append(line.strip())
+        with open("tasks.json", "r") as file:
+            tasks = json.load(file)
     except FileNotFoundError:
-        with open("tasks.txt", "w") as file:
+        tasks = []
+        with open("tasks.json", "w") as file:
+            json.dump(tasks, file)
             print("файл не найден, создан новый")
 
 
 def save_tasks(tasks):
-    with open("tasks.txt", "w") as file:
-        for line in tasks:
-            file.write(line + "\n")
+    with open("tasks.json", "w") as file:
+        json.dump(tasks, file, indent=4, ensure_ascii=False)
 
 def add_task():
     global tasks
     create_time = datetime.now().strftime("%d.%m.%Y %H:%M")
     text_input = input("Введите текст: ")
-    full_task = f"{text_input} | {create_time}"
+    full_task = {
+        "text": text_input,
+        "created": create_time,
+        "done": False
+    }
     tasks.append(full_task)
     save_tasks(tasks)
     print("Задача добавлена")
@@ -33,11 +39,8 @@ def show_tasks():
         return
     print("------------------------------------------------")
     for i, task in enumerate(tasks, 1):
-        if " | " in task:
-            text, data = task.split(" | ")
-            print(f"{i}. {text.ljust(30)} | {data}")
-        else:
-            print(f"{i}. {task}")
+        status = "✓" if task["done"] else ""
+        print(f"{i}. [{status}] {task['text']} | {task['created']}")
     print("------------------------------------------------")
 
 def delete_task():
@@ -55,12 +58,28 @@ def delete_task():
         print("Ошибка: введите число")
     save_tasks(tasks)
 
+def mark_done():
+
+    show_tasks()
+    num = input("Введите номер выполненной задачи: ").strip()
+    if num.isdigit():
+        num = int(num)
+        if 1 <= num <= len(tasks):
+            tasks[num-1]["done"] = True
+            show_tasks()
+            print("Задача отмечена как выполненная")
+        else:
+            print("Нет такого номера")
+    else:
+        print("Введите число")
+
 def menu_task():
     try:
         print("1. Добавить задачу\n"
             "2. Удалить задачу\n"
             "3. Посмотреть задачи\n"
-            "4. Выйти")
+            "4. Пометить задачу выполненой\n"
+            "5. Выйти")
         num_menu = int(input("В ведите действие: "))
         if num_menu == 1:
             add_task()
@@ -72,6 +91,9 @@ def menu_task():
             show_tasks()
             return True
         elif num_menu == 4:
+            mark_done()
+            return True
+        elif num_menu == 5:
             return False
     except ValueError:
         print("Вы ввели не число")
